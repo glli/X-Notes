@@ -1,13 +1,20 @@
 <?php
 	session_start();
+	$cfg = include('../config.php');
 	$username = $_SESSION['Username'];
-	$account = json_decode(file_get_contents("../source/cfg/account.config"), true);
-	$token = json_decode(file_get_contents("../source/cfg/token.config"), true);
+	if(!file_exists($cfg['xnotes_path'] . $username . "/cfg/account.config" )) {
+		$username = "admin";
+	}
+	$cfg_path = $cfg['xnotes_path'] . $username . "/cfg/";
+	$files_path = $cfg['xnotes_path'] . $username . "/files/";
+
+	$account = json_decode(file_get_contents($cfg_path . "account.config"), true);
+	$token = json_decode(file_get_contents($cfg_path . "token.config"), true);
 	if(!empty($token["time"]) && time() - $token["time"] > 604800) {
 		$token["key"] = str_shuffle(hash("sha512", str_shuffle(time())));
 		$token["time"] = "";
 		$json = json_encode($token);
-		$write = file_put_contents("../source/cfg/token.config", $json);
+		$write = file_put_contents($cfg_path . "token.config", $json);
 		setcookie("x-notes-remember-me", null, -1, "/");
 	}
 	if(isset($_COOKIE['x-notes-remember-me']) && $_COOKIE['x-notes-remember-me'] == $token["key"] && !empty($token["time"])) {
@@ -27,8 +34,9 @@
 		}
 		
 		function get_notes($format) {
+			global $files_path;
 			include "../assets/function_icons.php";
-			$files = glob("../files/*.xnt");
+			$files = glob($files_path . "*.xnt");
 			array_multisort(array_map('filemtime', $files), SORT_NUMERIC, SORT_DESC, $files);
 			
 			$file_list = array();
@@ -100,7 +108,7 @@
 			if(!empty($_POST['password'])) {
 				$password = $_POST['password'];
 			}
-			$note = json_decode(file_get_contents("../files/" . $file), true);
+			$note = json_decode(file_get_contents($files_path . $file), true);
 			$valid_password = $note["password"];
 			$locked = $note["locked"];
 			if($locked) {
@@ -122,7 +130,7 @@
 			}
 		}
 		if($action == "get-config") {
-			$config = file_get_contents("../source/cfg/preferences.config");
+			$config = file_get_contents($cfg_path . "preferences.config");
 			echo $config;
 		}
 	}
@@ -132,7 +140,7 @@
 		if(!empty($_POST['password'])) {
 			$password = $_POST['password'];
 		}
-		$note = json_decode(file_get_contents("../files/" . $file), true);
+		$note = json_decode(file_get_contents($files_path . $file), true);
 		$valid_password = $note["password"];
 		$locked = $note["locked"];
 		$shared = $note["shared"];
@@ -160,7 +168,7 @@
 	}
 	
 	if($action == "get-placeholders") {
-		$files = glob("../files/*.xnt");
+		$files = glob($files_path . "*.xnt");
 		array_multisort(array_map('filemtime', $files), SORT_NUMERIC, SORT_DESC, $files);
 		
 		foreach($files as $file) {

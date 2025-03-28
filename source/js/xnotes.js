@@ -800,7 +800,7 @@ $(document).ready(function() {
 			$(".public-button").hide();
 			$(".private-button").show();
 			$(".link-button").show();
-			$(".editor-content").attr("data-si", "s-" + file.substr(0, file.length - 4));
+			$(".editor-content").attr("data-si", "s-" + file.substr(0, file.length - 4) + "-" + $(".main-page").attr("data-encoded"));
 		}
 		else {
 			$(".public-button").show();
@@ -1168,7 +1168,7 @@ $(document).ready(function() {
 						$(".public-button").hide();
 						$(".private-button").show();
 						$(".link-button").show();
-						$(".editor-content").attr("data-si", "s-" + file.substr(0, file.length - 4));
+						$(".editor-content").attr("data-si", "s-" + file.substr(0, file.length - 4) + "-" + $(".main-page").attr("data-encoded"));
 						setTimeout(function() {
 							adjust_note_facade();
 						}, 250);

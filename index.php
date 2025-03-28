@@ -1,13 +1,18 @@
 <?php	
 	session_start();
+	$cfg = include('config.php');
 	$username = $_SESSION['Username'];
-	$account = json_decode(file_get_contents("./source/cfg/account.config"), true);
-	$token = json_decode(file_get_contents("./source/cfg/token.config"), true);
+	$cfg_path = $cfg['xnotes_path'] . $username . "/cfg/";
+	if(!file_exists($cfg_path . "account.config")) {
+		$cfg_path = $cfg['xnotes_path'] . "admin/cfg/";
+	}
+	$account = json_decode(file_get_contents($cfg_path . "account.config"), true);
+	$token = json_decode(file_get_contents($cfg_path . "token.config"), true);
 	if(!empty($token["time"]) && time() - $token["time"] > 604800) {
 		$token["key"] = str_shuffle(hash("sha512", str_shuffle(time())));
 		$token["time"] = "";
 		$json = json_encode($token);
-		$write = file_put_contents("../source/cfg/token.config", $json);
+		$write = file_put_contents($cfg_path . "token.config", $json);
 		setcookie("x-notes-remember-me", null, -1, "/");
 	}
 	if(isset($_COOKIE['x-notes-remember-me']) && $_COOKIE['x-notes-remember-me'] == $token['key'] && !empty($token["time"])) {
@@ -15,7 +20,7 @@
 	}
 	$valid_username = $account["username"];
 	
-	$config_json = file_get_contents("./source/cfg/preferences.config");
+	$config_json = file_get_contents($cfg_path . "preferences.config");
 	$config = json_decode($config_json, true);
 	$theme = $config["appearance"]["theme"];
 	$sidebar_items = $config["appearance"]["sidebar-items"];
@@ -64,6 +69,7 @@
 		<script src="./source/js/jquery.js"></script>
 		<script src="./source/js/tippy.js"></script>
 		<script src="./source/js/xnotes.js?<?php echo time(); ?>"></script>
+		<link rel="icon" type="image/png" href="./source/images/favicon.png">
 		<link rel="stylesheet" href="./source/css/structure.css?<?php echo time(); ?>">
 		<link rel="stylesheet" href="./source/css/<?php echo $theme; ?>.css?<?php echo time(); ?>" class="theme-stylesheet">
 		<link rel="stylesheet" href="./source/css/resize.css?<?php echo time(); ?>">
@@ -74,7 +80,7 @@
 	</head>
 	
 	<body id="<?php echo $device; ?>" data-domain="<?php echo $domain; ?>" style="background:<?php echo $theme_body_color; ?>;">
-		<div class="main-page">
+		<div class="main-page" data-encoded="<?php echo bin2hex(str_rot13($username)); ?>">
 			<div class="column sidebar-wrapper noselect">
 				<div class="sidebar-top">
 					<div class="sidebar-icon-wrapper compose-button">
@@ -110,7 +116,7 @@
 					<div class="notes-list-padding"></div>
 				</div>
 				<div class="column-navbar search-wrapper">
-					<input class="search-bar" type="text" placeholder="Search..." name="search" autocomplete="off">
+					<input class="search-bar" type="text" placeholder="Search..." name="search" autocomplete="one-time-code">
 				</div>
 			</div>
 			<div class="column editor-wrapper">
