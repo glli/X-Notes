@@ -8,9 +8,10 @@
   * In xnotes folder, copy admin folder and rename it to a new username, e.g. glli
   * Change 'admin' to 'glli' in glli/cfg/account.config
   * Login with 'glli' (password: root) and change the password
-* Add favicon and readme in admin files
+  * To delete a user, simply delete the user folder in xnotes folder
+* Add readme in admin files and favicon
 
-(Tested with php 7.4 on my dd-wrt router, may not work with newer php version)
+(Tested with php 7.4 on my dd-wrt router, may not work with newer php versions)
 
 # X:/Notes
 

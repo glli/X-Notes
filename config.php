@@ -1,5 +1,5 @@
 <?php
 	return array(
-    	'xnotes_path' => '/jffs/var/lib/xnotes/',
+		'xnotes_path' => '/jffs/var/lib/xnotes/',
 	);
 ?>

@@ -366,10 +366,15 @@
 				$posted_password = $_POST['password'];
 				if(password_verify($posted_password, $valid_password)) {
 					if(ctype_alnum($posted_username)) {
-						$account["username"] = $posted_username;
-						$json = json_encode($account);
-						file_put_contents($cfg_path . "account.config", $json);
-						echo "done";
+						if(!file_exists($cfg['xnotes_path'] . $posted_username)) {
+							$account["username"] = $posted_username;
+							$json = json_encode($account);
+							file_put_contents($cfg_path . "account.config", $json);
+							rename($cfg['xnotes_path'] . $username, $cfg['xnotes_path'] . $posted_username);
+							echo "done";
+						} else {
+							echo "Username exists! Please choose another one.";
+						}
 					}
 					else {
 						echo "Username can only have letters and numbers.";
