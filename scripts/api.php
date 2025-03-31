@@ -1,29 +1,5 @@
 <?php
-	session_start();
-	$cfg = include('../config.php');
-	$username = $_SESSION['Username'];
-	if(!file_exists($cfg['xnotes_path'] . $username . "/cfg/account.config" )) {
-		$username = "admin";
-	}
-	$cfg_path = $cfg['xnotes_path'] . $username . "/cfg/";
-	$files_path = $cfg['xnotes_path'] . $username . "/files/";
-
-	$account = json_decode(file_get_contents($cfg_path . "account.config"), true);
-	$token = json_decode(file_get_contents($cfg_path . "token.config"), true);
-	if(!empty($token["time"]) && time() - $token["time"] > 604800) {
-		$token["key"] = str_shuffle(hash("sha512", str_shuffle(time())));
-		$token["time"] = "";
-		$json = json_encode($token);
-		$write = file_put_contents($cfg_path . "token.config", $json);
-		setcookie("x-notes-remember-me", null, -1, "/");
-	}
-	if(isset($_COOKIE['x-notes-remember-me']) && $_COOKIE['x-notes-remember-me'] == $token["key"] && !empty($token["time"])) {
-		$token_valid = true;
-	}
-	$valid_username = $account["username"];
-	if(strtolower($username) == strtolower($valid_username) or $token_valid) {
-		$logged_in = true;
-	}
+	include "../init.php";
 	
 	$action = $_POST['action'];
 	

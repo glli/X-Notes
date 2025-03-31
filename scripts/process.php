@@ -1,30 +1,7 @@
 <?php
-	session_start();
-	$cfg = include('../config.php');
-	$username = $_SESSION['Username'];
-	if(!file_exists($cfg['xnotes_path'] . $username . "/cfg/account.config" )) {
-		$username = "admin";
-	}
-	$cfg_path = $cfg['xnotes_path'] . $username . "/cfg/";
-	$files_path = $cfg['xnotes_path'] . $username . "/files/";
-	
-	$account = json_decode(file_get_contents($cfg_path . "account.config"), true);
-	$token = json_decode(file_get_contents($cfg_path . "token.config"), true);
-	if(!empty($token["time"]) && time() - $token["time"] > 604800) {
-		$token["key"] = str_shuffle(hash("sha512", str_shuffle(time())));
-		$token["time"] = "";
-		$json = json_encode($token);
-		$write = file_put_contents($cfg_path . "token.config", $json);
-		setcookie("x-notes-remember-me", null, -1, "/");
-	}
-	if(isset($_COOKIE['x-notes-remember-me']) && $_COOKIE['x-notes-remember-me'] == $token["key"] && !empty($token["time"])) {
-		$token_valid = true;
-	}
-	$valid_username = $account["username"];
+	include "../init.php";
+
 	$valid_password = $account["password"];
-	if(strtolower($username) == strtolower($valid_username) or $token_valid) {
-		$logged_in = true;
-	}
 	
 	$action = $_POST['action'];
 	
@@ -43,20 +20,18 @@
 
 			if(strtolower($username) == strtolower($valid_username) && password_verify($password, $valid_password)) {
 				$_SESSION['Username'] = $valid_username;
-				
-				$token["key"] = str_shuffle(hash("sha512", str_shuffle(time())));
-				
+
 				if($remember == "true") {
-					$token["time"] = time();
-					setcookie("x-notes-remember-me", $token["key"], time() + 604800, "/");
+					// 28 day ttl
+					$ttl = time() + 2419200;
+					$key = str_shuffle(hash("sha512", str_shuffle($ttl)));
+					$token = json_decode(file_get_contents($cfg_path . "token.config"), true);
+					$token[$key] = $ttl;
+					setcookie("x-notes-remember-me", $key, $ttl, "/");
+					setcookie("x-notes-data-encoded", bin2hex(str_rot13($username)), $ttl, "/");
+					file_put_contents($cfg_path . "token.config", json_encode($token));
 				}
-				else {
-					$token["time"] = "";
-					setcookie("x-notes-remember-me", null, -1, "/");
-				}
-				
-				$json = json_encode($token);
-				$write = file_put_contents($cfg_path . "token.config", $json);
+
 				echo "done";
 			}
 			else {
@@ -67,16 +42,15 @@
 			echo "Please fill out both input fields.";
 		}
 	}
-	if($action == "logout") {
+	if($action == "logout") { // clear all tokens
 		session_start();
 		session_destroy();
 		$_SESSION = array();
-		$token["key"] = str_shuffle(hash("sha512", str_shuffle(time())));
-		$token["time"] = "";
-		$json = json_encode($token);
-		$write = file_put_contents($cfg_path . "token.config", $json);
+		file_put_contents($cfg_path . "token.config", "{}");
+		setcookie("x-notes-remember-me", null, -1, "/");
+		setcookie("x-notes-data-encoded", null, -1, "/");
 		if(empty($_SESSION)) {
-			echo "done";	
+			echo "done";
 		}
 	}
 	
@@ -370,7 +344,7 @@
 							$account["username"] = $posted_username;
 							$json = json_encode($account);
 							file_put_contents($cfg_path . "account.config", $json);
-							rename($cfg['xnotes_path'] . $username, $cfg['xnotes_path'] . $posted_username);
+							rename($cfg['xnotes_path'] . $valid_username, $cfg['xnotes_path'] . $posted_username);
 							echo "done";
 						} else {
 							echo "Username exists! Please choose another one.";

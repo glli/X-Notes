@@ -1,25 +1,6 @@
 <?php	
-	session_start();
-	$cfg = include('config.php');
-	$username = $_SESSION['Username'];
-	$cfg_path = $cfg['xnotes_path'] . $username . "/cfg/";
-	if(!file_exists($cfg_path . "account.config")) {
-		$cfg_path = $cfg['xnotes_path'] . "admin/cfg/";
-	}
-	$account = json_decode(file_get_contents($cfg_path . "account.config"), true);
-	$token = json_decode(file_get_contents($cfg_path . "token.config"), true);
-	if(!empty($token["time"]) && time() - $token["time"] > 604800) {
-		$token["key"] = str_shuffle(hash("sha512", str_shuffle(time())));
-		$token["time"] = "";
-		$json = json_encode($token);
-		$write = file_put_contents($cfg_path . "token.config", $json);
-		setcookie("x-notes-remember-me", null, -1, "/");
-	}
-	if(isset($_COOKIE['x-notes-remember-me']) && $_COOKIE['x-notes-remember-me'] == $token['key'] && !empty($token["time"])) {
-		$token_valid = true;
-	}
-	$valid_username = $account["username"];
-	
+	include "init.php";
+
 	$config_json = file_get_contents($cfg_path . "preferences.config");
 	$config = json_decode($config_json, true);
 	$theme = $config["appearance"]["theme"];
@@ -51,10 +32,6 @@
 	elseif($theme == "dark") {
 		$theme_color = "#3c3c3c";
 		$theme_body_color = "rgb(40,40,40)";
-	}
-	
-	if(strtolower($username) == strtolower($valid_username) or $token_valid) {
-		$logged_in = true;
 	}
 	
 	if(!$logged_in) {
