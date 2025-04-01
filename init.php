@@ -24,7 +24,9 @@
 		if($time > $ttl) {
 			unset($token[$key]);
 			$token_change = true;
-		} elseif($key == $_COOKIE['x-notes-remember-me']) {
+		} elseif(isset($_SERVER['HTTP_USER_AGENT'])
+			&& substr($key, 16) == $_COOKIE['x-notes-remember-me']
+			&& substr($key, 0, 16) == hash("fnv164", $_SERVER['HTTP_USER_AGENT'])) {
 			$token_valid = true;
 		}
 	}

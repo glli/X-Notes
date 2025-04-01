@@ -21,12 +21,12 @@
 			if(strtolower($username) == strtolower($valid_username) && password_verify($password, $valid_password)) {
 				$_SESSION['Username'] = $valid_username;
 
-				if($remember == "true") {
+				if($remember == "true" && isset($_SERVER['HTTP_USER_AGENT'])) {
 					// 28 day ttl
-					$ttl = time() + 2419200;
+					$ttl = time() + 3600 * 24 * 28;
 					$key = str_shuffle(hash("sha512", str_shuffle($ttl)));
 					$token = json_decode(file_get_contents($cfg_path . "token.config"), true);
-					$token[$key] = $ttl;
+					$token[hash("fnv164", $_SERVER['HTTP_USER_AGENT']) . $key] = $ttl;
 					setcookie("x-notes-remember-me", $key, $ttl, "/");
 					setcookie("x-notes-data-encoded", bin2hex(str_rot13($username)), $ttl, "/");
 					file_put_contents($cfg_path . "token.config", json_encode($token));
