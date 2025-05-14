@@ -129,10 +129,10 @@
 				}
 			}
 			else {
-				$current["content"] = $text;
 				if($current["content"] != $text) {
 					$current["time_modified"] = time();
 				}
+                $current["content"] = $text;
 				$handle = fopen($file, "w");
 				$write = fwrite($handle, json_encode($current));
 				if($write !== false) {
