@@ -602,6 +602,10 @@ $(document).ready(function() {
 		close_raw_data();
 	});
 	$(".user-confirmation-wrapper .close-icon").on("click", function() {
+		var action = $(".user-confirmation-wrapper .check-icon").attr("id");
+		if (action == "must-close-note") {
+			set_inactivity_timeout(true);
+		}
 		close_user_confirmation();
 	});
 	$(".user-confirmation-wrapper .check-icon").on("click", function() {
@@ -610,6 +614,8 @@ $(document).ready(function() {
 		if(action == "delete-note") {
 			var password = atob($(".editor-content").data("pw"));
 			delete_note(data, password, false);
+		} else if (action == "must-close-note") {
+			must_close_note();
 		}
 		close_user_confirmation();
 	});
@@ -1083,6 +1089,7 @@ $(document).ready(function() {
 			data: { action: "open-note", file: file, password: password },
 			url: "./scripts/api.php",
 			success: function(data) {
+				set_inactivity_timeout(true);
 				if(locked) {
 					if(data != "incorrect") {
 						$(".editor-content").data("pw", btoa(password));
@@ -1117,6 +1124,7 @@ $(document).ready(function() {
 						adjust_note_facade();
 						$(".editor-content").focus();
 					}, 250);
+					$(".editor-content").attr("note-change", "");
 				}
 				else {
 					notify("Error...", "Something went wrong.", "red", 4000);
@@ -1198,8 +1206,16 @@ $(document).ready(function() {
 		}
 	}
 	function close_note() {
+		set_inactivity_timeout(false);
+		if ($(".editor-content").attr("note-change") === "true") {
+			open_user_confirmation("Are you sure to close?", "The note is changed and not saved.", "", "must-close-note");
+		} else {
+			must_close_note();
+		}
+	}
+	function must_close_note() {
 		deselect_notes();
-		$(".editor-content").addClass("editor-empty").attr({"contenteditable":"true", "placeholder":"New note...", "id":"", "data-title":"", "data-locked":"", "data-si":""}).data("pw", "").html("").blur();
+		$(".editor-content").addClass("editor-empty").attr({"contenteditable":"true", "placeholder":"New note...", "id":"", "data-title":"", "data-locked":"", "data-si":"", "note-change":""}).data("pw", "").html("").blur();
 		$(".editor-container").css({"height":"calc(100% - 40px)", "top":"0"});
 		$(".actions-navbar").css({"display":"none"});
 		close_editor_menu();
@@ -1495,7 +1511,9 @@ $(document).ready(function() {
 				create_tooltips();
 			}
 		}, 250);
-		$(".editor-content").attr({"contenteditable":"true", "placeholder":"New note...", "id":"", "data-title":"", "data-locked":"", "data-si":""}).data("pw", "");	
+		$(".editor-content").attr({"contenteditable":"true", "placeholder":"New note...", "id":"", "data-title":"", "data-locked":"", "data-si":""}).data("pw", "").on('input', function(){
+			$(this).attr("note-change", "true");
+		});
 	}
 	function set_global_settings() {
 		global_setting_config = JSON.parse($(".settings-wrapper").attr("data-global"));
@@ -1508,5 +1526,23 @@ $(document).ready(function() {
 		global_setting_tooltips = global_setting_config["behavior"]["tooltips"];
 		global_setting_notifications = global_setting_config["behavior"]["notifications"];
 		setTimeout(apply_settings, 125); // TO BE CHANGED
+	}
+
+	var inactivity_timer;
+	function set_inactivity_timeout(on) {
+		if (on) {
+			const idle_milliseconds = 5 * 60 * 1000;
+			function resetTimer() {
+				clearTimeout(inactivity_timer);
+				inactivity_timer = setTimeout(() => {
+					console.log("Close the note due to inactivity timeout");
+					close_note();
+				}, idle_milliseconds);
+			}
+			$(document.body).on("mousemove keydown click", resetTimer);
+		} else {
+			clearTimeout(inactivity_timer);
+			$(document.body).off("mousemove keydown click");
+		}
 	}
 });
