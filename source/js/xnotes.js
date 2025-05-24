@@ -603,7 +603,7 @@ $(document).ready(function() {
 	});
 	$(".user-confirmation-wrapper .close-icon").on("click", function() {
 		var action = $(".user-confirmation-wrapper .check-icon").attr("id");
-		if (action == "must-close-note") {
+		if (action == "must-close-note" || action == "select-note") {
 			set_inactivity_timeout(true);
 		}
 		close_user_confirmation();
@@ -616,6 +616,8 @@ $(document).ready(function() {
 			delete_note(data, password, false);
 		} else if (action == "must-close-note") {
 			must_close_note();
+		} else if (action == "select-note") {
+			select_note(data);
 		}
 		close_user_confirmation();
 	});
@@ -720,21 +722,32 @@ $(document).ready(function() {
 	// Clicking On Note List Items
 	
 	$(".notes-list").delegate(".note-wrapper", "click", function() {
-		var file = $(this).attr("id").substr(2);
-		var title = $(this).find(".note-title").text();
+		set_inactivity_timeout(false);
+		if ($(".editor-content").attr("note-change") == "true" && !$(this).hasClass("active")) {
+			open_user_confirmation("Are you sure to close?", "The note is changed and not saved.", $(this).attr("id"), "select-note");
+		} else {
+			select_note($(this).attr("id"));
+		}
+	});
+
+	function select_note(note_id) {
+		// not sure why $("#" + note_id) doesn't work
+		let this_note = $(document.getElementById(note_id));
+		var file = note_id.substr(2);
+		var title = this_note.find(".note-title").text();
 		var locked = false;
 		var shared = false;
-		if($(this).attr("data-locked") == "locked-note") {
+		if(this_note.attr("data-locked") == "locked-note") {
 			var locked = true;
 		}
-		if($(this).attr("data-shared") == "shared-note") {
+		if(this_note.attr("data-shared") == "shared-note") {
 			var shared = true;
 		}
 		if(locked) {
 			$(".lock-button").hide();
 			$(".unlock-button").show();
 			$(".relock-button").show();
-			if(!$(this).hasClass("active")) {
+			if(!this_note.hasClass("active")) {
 				open_note_lock("locked", "reveal-note", "View Note", "This will not remove the lock permanently.");
 				$(".note-lock-wrapper .close-icon").attr("id", "reveal");
 				$(".note-lock-wrapper .check-icon").attr("data-file", file);
@@ -753,15 +766,15 @@ $(document).ready(function() {
 				$(".editor-container").css({"height":"calc(100% - 90px)", "top":"50px"});
 				$(".actions-navbar").css({"display":"block"});
 				deselect_notes();
-				$(this).find(".note-container").css({"background":"rgb(0,150,255)"});
+				this_note.find(".note-container").css({"background":"rgb(0,150,255)"});
 				if(global_setting_separators == "visible") {
-					$(this).find(".note-container").css({"border-bottom":"1px solid rgb(0,150,255)"});
-					$(this).prev().find(".note-container").css("border-bottom", "1px solid rgba(255,255,255,0)");
+					this_note.find(".note-container").css({"border-bottom":"1px solid rgb(0,150,255)"});
+					this_note.prev().find(".note-container").css("border-bottom", "1px solid rgba(255,255,255,0)");
 				}
-				$(this).find(".note-title-wrapper").css({"color":"rgb(245,245,245)"});
-				$(this).find(".note-date-wrapper").css({"color":"rgb(235,235,235)"});
-				$(this).find("svg").css("fill", "rgb(240,240,240)");
-				$(this).addClass("active");
+				this_note.find(".note-title-wrapper").css({"color":"rgb(245,245,245)"});
+				this_note.find(".note-date-wrapper").css({"color":"rgb(235,235,235)"});
+				this_note.find("svg").css("fill", "rgb(240,240,240)");
+				this_note.addClass("active");
 			}
 			else {
 				$(".editor-content").focus();
@@ -771,7 +784,7 @@ $(document).ready(function() {
 			$(".lock-button").show();
 			$(".unlock-button").hide();
 			$(".relock-button").hide();
-			if(!$(this).hasClass("active")) {
+			if(!this_note.hasClass("active")) {
 				open_note(file);
 				$(".editor-content").removeClass("editor-empty").attr({"data-title":title, "id":"e-" + file, "data-locked":"false"});
 				$(".actions-wrapper-left-overlay").show();
@@ -788,15 +801,15 @@ $(document).ready(function() {
 				$(".editor-container").css({"height":"calc(100% - 90px)", "top":"50px"});
 				$(".actions-navbar").css({"display":"block"});
 				deselect_notes();
-				$(this).find(".note-container").css({"background":"rgb(0,150,255)"});
+				this_note.find(".note-container").css({"background":"rgb(0,150,255)"});
 				if(global_setting_separators == "visible") {
-					$(this).find(".note-container").css({"border-bottom":"1px solid rgb(0,150,255)"});
-					$(this).prev().find(".note-container").css("border-bottom", "1px solid rgba(255,255,255,0)");
+					this_note.find(".note-container").css({"border-bottom":"1px solid rgb(0,150,255)"});
+					this_note.prev().find(".note-container").css("border-bottom", "1px solid rgba(255,255,255,0)");
 				}
-				$(this).find(".note-title-wrapper").css({"color":"rgb(245,245,245)"});
-				$(this).find(".note-date-wrapper").css({"color":"rgb(235,235,235)"});
-				$(this).find("svg").css("fill", "rgb(240,240,240)");
-				$(this).addClass("active");
+				this_note.find(".note-title-wrapper").css({"color":"rgb(245,245,245)"});
+				this_note.find(".note-date-wrapper").css({"color":"rgb(235,235,235)"});
+				this_note.find("svg").css("fill", "rgb(240,240,240)");
+				this_note.addClass("active");
 			}
 			else {
 				$(".editor-content").focus();
@@ -815,7 +828,7 @@ $(document).ready(function() {
 			$(".editor-content").attr("data-si", "");
 		}
 		adjust_to_window_size();
-	});
+	}
 	
 	// Fading/Unfading The Actions Navbar
 	
@@ -1093,7 +1106,7 @@ $(document).ready(function() {
 				if(locked) {
 					if(data != "incorrect") {
 						$(".editor-content").data("pw", btoa(password));
-						$(".editor-content").html(data).attr({"placeholder":"Write something...", "id":"e-" + file});
+						$(".editor-content").html(data).attr({"placeholder":"Write something...", "id":"e-" + file, "note-change":""});
 					}
 					else {
 						close_note();
@@ -1101,7 +1114,7 @@ $(document).ready(function() {
 					}
 				}
 				else {
-					$(".editor-content").html(data).attr({"placeholder":"Write something...", "id":"e-" + file});
+					$(".editor-content").html(data).attr({"placeholder":"Write something...", "id":"e-" + file, "note-change":""});
 				}
 			}
 		});
@@ -1531,13 +1544,13 @@ $(document).ready(function() {
 	var inactivity_timer;
 	function set_inactivity_timeout(on) {
 		if (on) {
-			const idle_milliseconds = 5 * 60 * 1000;
+			const idle_minutes = 5;
 			function resetTimer() {
 				clearTimeout(inactivity_timer);
 				inactivity_timer = setTimeout(() => {
 					console.log("Close the note due to inactivity timeout");
 					close_note();
-				}, idle_milliseconds);
+				}, idle_minutes * 60 * 1000);
 			}
 			$(document.body).on("mousemove keydown click", resetTimer);
 		} else {
