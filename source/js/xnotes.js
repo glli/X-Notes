@@ -733,6 +733,9 @@ $(document).ready(function() {
 	function select_note(note_id) {
 		// not sure why $("#" + note_id) doesn't work
 		let this_note = $(document.getElementById(note_id));
+		if (!this_note.hasClass("active")) {
+			$(".editor-content").attr("note-change", "");
+		}
 		var file = note_id.substr(2);
 		var title = this_note.find(".note-title").text();
 		var locked = false;
@@ -1106,7 +1109,7 @@ $(document).ready(function() {
 				if(locked) {
 					if(data != "incorrect") {
 						$(".editor-content").data("pw", btoa(password));
-						$(".editor-content").html(data).attr({"placeholder":"Write something...", "id":"e-" + file, "note-change":""});
+						$(".editor-content").html(data).attr({"placeholder":"Write something...", "id":"e-" + file});
 					}
 					else {
 						close_note();
@@ -1114,7 +1117,7 @@ $(document).ready(function() {
 					}
 				}
 				else {
-					$(".editor-content").html(data).attr({"placeholder":"Write something...", "id":"e-" + file, "note-change":""});
+					$(".editor-content").html(data).attr({"placeholder":"Write something...", "id":"e-" + file});
 				}
 			}
 		});
@@ -1128,6 +1131,7 @@ $(document).ready(function() {
 			data: { action: "save-note", file: file, text: text, password: password },
 			url: "./scripts/process.php",
 			success: function(data) {
+				$(".editor-content").attr("note-change", "");
 				if(data == "done") {
 					if(!background) {
 						notify("Saving...", "Your note has been saved.", "blue", 4000);
@@ -1137,7 +1141,6 @@ $(document).ready(function() {
 						adjust_note_facade();
 						$(".editor-content").focus();
 					}, 250);
-					$(".editor-content").attr("note-change", "");
 				}
 				else {
 					notify("Error...", "Something went wrong.", "red", 4000);
