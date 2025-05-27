@@ -697,7 +697,7 @@ $(document).ready(function() {
 			var password = $(".current-password").val();
 			open_note(file, password, true);
 			setTimeout(function() {
-				close_note_lock();
+				close_note_lock("reveal-note");
 			}, 250);
 		}
 	});
@@ -948,7 +948,7 @@ $(document).ready(function() {
 		if(condition == "reveal") {
 			deselect_notes();
 			close_note();
-		} else {
+		} else if (condition != "reveal-note"){
 			set_inactivity_timeout(true);
 		}
 	}
@@ -1062,7 +1062,9 @@ $(document).ready(function() {
 				if(data == "done") {
 					notify("Relocking...", "Your note's password has been changed.", "blue", 4000);
 					get_notes();
-					close_note();
+					setTimeout(function() {
+						close_note();
+					}, 250);
 				}
 				else {
 					notify("Error...", "The password you entered was incorrect.", "red", 4000);
