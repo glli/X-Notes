@@ -28,7 +28,6 @@
 			if(substr($key, 0, 16) == hash("fnv164", $_SERVER['HTTP_USER_AGENT'])) {
 				$token_valid = true;
 			} else {
-				// should not happen unless user copies the cookie to another place
 				unset($token[$key]);
 				$token_change = true;
 			}

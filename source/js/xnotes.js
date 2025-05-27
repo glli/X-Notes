@@ -209,6 +209,7 @@ $(document).ready(function() {
 		open_note_lock("locked", "relock-note", "Change Lock Password", "Changes will be saved automatically.");
 	});
 	$(".rename-button").on("click", function() {
+		set_inactivity_timeout(false);
 		var title = $(".editor-content").attr("data-title");
 		$(".note-title-edit-wrapper").show();
 		$(".note-title-edit-wrapper .check-icon").attr("id", "rename-note");
@@ -230,17 +231,22 @@ $(document).ready(function() {
 	// Composing A Note
 	
 	$(".compose-button").on("click", function() {
-		$(".note-title-edit-wrapper").show();
-		$(".note-title-edit-wrapper .check-icon").attr("id", "create-note");
-		$(".note-title-edit-text").html("What's the title of your new note?");
-		$(".note-title-edit-input").focus().attr("placeholder", "Title...");
+		if ($(".editor-content").attr("note-change") === "true") {
+			open_user_confirmation("Are you sure to close?", "The note is changed and not saved.", "", "compose-note");
+		} else {
+			compose_note();
+		}
 	});
 	$(".editor-wrapper").delegate(".editor-empty", "click", function() {
+		compose_note();
+	});
+
+	function compose_note() {
 		$(".note-title-edit-wrapper").show();
 		$(".note-title-edit-wrapper .check-icon").attr("id", "create-note");
 		$(".note-title-edit-text").html("What's the title of your new note?");
 		$(".note-title-edit-input").focus().attr("placeholder", "Title...");
-	});
+	}
 	
 	// Help Page Functionality
 	
@@ -287,6 +293,7 @@ $(document).ready(function() {
 	
 	$(".settings-pane").delegate(".settings-note-delete-button", "click", function() {
 		var file = $(this).attr("id");
+		$(".editor-content").attr("note-change", "");
 		delete_note(file, "", true);
 		setTimeout(function() {
 			$(".settings-notes-button").trigger("click");
@@ -602,15 +609,13 @@ $(document).ready(function() {
 		close_raw_data();
 	});
 	$(".user-confirmation-wrapper .close-icon").on("click", function() {
-		var action = $(".user-confirmation-wrapper .check-icon").attr("id");
-		if (action == "must-close-note" || action == "select-note") {
-			set_inactivity_timeout(true);
-		}
 		close_user_confirmation();
+		set_inactivity_timeout(true);
 	});
 	$(".user-confirmation-wrapper .check-icon").on("click", function() {
 		var action = $(".user-confirmation-wrapper .check-icon").attr("id");
 		var data = $(".user-confirmation-wrapper").show().attr("id");
+		$(".editor-content").attr("note-change", "");
 		if(action == "delete-note") {
 			var password = atob($(".editor-content").data("pw"));
 			delete_note(data, password, false);
@@ -618,6 +623,8 @@ $(document).ready(function() {
 			must_close_note();
 		} else if (action == "select-note") {
 			select_note(data);
+		} else if (action == "compose-note") {
+			compose_note();
 		}
 		close_user_confirmation();
 	});
@@ -698,10 +705,14 @@ $(document).ready(function() {
 	// Note Title Editing UI Functionality
 	
 	$(".note-title-edit-wrapper .close-icon").on("click", function() {
+		var action = $(".note-title-edit-wrapper .check-icon").attr("id");
 		$(".note-title-edit-wrapper").hide();
 		$(".note-title-edit-text").html("");
 		$(".note-title-edit-input").val("").attr("placeholder", "");
 		$(".note-title-edit-wrapper .check-icon").attr("id", "");
+		if(action == "rename-note") {
+			set_inactivity_timeout(true);
+		}
 	});
 	$(".note-title-edit-wrapper .check-icon").on("click", function() {
 		var title = $(".note-title-edit-input").val();
@@ -717,12 +728,12 @@ $(document).ready(function() {
 		$(".note-title-edit-input").val("").attr("placeholder", "");
 		$(".note-title-edit-text").html("");
 		$(".note-title-edit-wrapper .check-icon").attr("id", "");
+		set_inactivity_timeout(true);
 	});
 	
 	// Clicking On Note List Items
 	
 	$(".notes-list").delegate(".note-wrapper", "click", function() {
-		set_inactivity_timeout(false);
 		if ($(".editor-content").attr("note-change") == "true" && !$(this).hasClass("active")) {
 			open_user_confirmation("Are you sure to close?", "The note is changed and not saved.", $(this).attr("id"), "select-note");
 		} else {
@@ -733,9 +744,6 @@ $(document).ready(function() {
 	function select_note(note_id) {
 		// not sure why $("#" + note_id) doesn't work
 		let this_note = $(document.getElementById(note_id));
-		if (!this_note.hasClass("active")) {
-			$(".editor-content").attr("note-change", "");
-		}
 		var file = note_id.substr(2);
 		var title = this_note.find(".note-title").text();
 		var locked = false;
@@ -881,7 +889,7 @@ $(document).ready(function() {
 		if(event.which == 13 && $(".note-title-edit-wrapper").is(":visible")) {
 			$(".note-title-edit-wrapper .check-icon").trigger("click");
 		}
-		if(event.which == 27 && !$(".editor-content").hasClass(".editor-empty")) {
+		if(event.which == 27 && !$(".editor-content").hasClass(".editor-empty") && inactivity_timer != null) {
 			close_note();
 		}
 		if(event.which == 13 && $(".note-lock-wrapper").is(":visible")) {
@@ -914,6 +922,7 @@ $(document).ready(function() {
 	// User Prompt & Popup UI Functions
 	
 	function open_user_confirmation(title, description, data, action) {
+		set_inactivity_timeout(false);
 		$(".user-confirmation-wrapper").show().attr("id", data);
 		$(".user-confirmation-title").html(title);
 		$(".user-confirmation-description").html(description);
@@ -939,9 +948,12 @@ $(document).ready(function() {
 		if(condition == "reveal") {
 			deselect_notes();
 			close_note();
+		} else {
+			set_inactivity_timeout(true);
 		}
 	}
 	function open_note_lock(state, action, title, description) {
+		set_inactivity_timeout(false);
 		close_editor_menu();
 		$(".note-lock-title").html(title);
 		$(".note-lock-description").html(description);
@@ -1222,16 +1234,16 @@ $(document).ready(function() {
 		}
 	}
 	function close_note() {
-		set_inactivity_timeout(false);
 		if ($(".editor-content").attr("note-change") === "true") {
 			open_user_confirmation("Are you sure to close?", "The note is changed and not saved.", "", "must-close-note");
 		} else {
+			set_inactivity_timeout(false);
 			must_close_note();
 		}
 	}
 	function must_close_note() {
 		deselect_notes();
-		$(".editor-content").addClass("editor-empty").attr({"contenteditable":"true", "placeholder":"New note...", "id":"", "data-title":"", "data-locked":"", "data-si":"", "note-change":""}).data("pw", "").html("").blur();
+		$(".editor-content").addClass("editor-empty").attr({"contenteditable":"true", "placeholder":"New note...", "id":"", "data-title":"", "data-locked":"", "data-si":""}).data("pw", "").html("").blur();
 		$(".editor-container").css({"height":"calc(100% - 40px)", "top":"0"});
 		$(".actions-navbar").css({"display":"none"});
 		close_editor_menu();
@@ -1544,9 +1556,9 @@ $(document).ready(function() {
 		setTimeout(apply_settings, 125); // TO BE CHANGED
 	}
 
-	var inactivity_timer;
+	var inactivity_timer = null;
 	function set_inactivity_timeout(on) {
-		if (on) {
+		if (on && inactivity_timer == null) {
 			const idle_minutes = 5;
 			function resetTimer() {
 				clearTimeout(inactivity_timer);
@@ -1555,9 +1567,11 @@ $(document).ready(function() {
 					close_note();
 				}, idle_minutes * 60 * 1000);
 			}
+			resetTimer();
 			$(document.body).on("mousemove keydown click", resetTimer);
-		} else {
+		} else if (!on && inactivity_timer != null) {
 			clearTimeout(inactivity_timer);
+			inactivity_timer = null;
 			$(document.body).off("mousemove keydown click");
 		}
 	}
