@@ -27,8 +27,8 @@
 					$key = str_shuffle(hash("sha512", str_shuffle($ttl)));
 					$token = json_decode(file_get_contents($cfg_path . "token.config"), true);
 					$token[hash("fnv164", $_SERVER['HTTP_USER_AGENT']) . $key] = $ttl;
-					setcookie("x-notes-remember-me", $key, $ttl, "/");
-					setcookie("x-notes-data-encoded", bin2hex(str_rot13($username)), $ttl, "/");
+					setcookie("x-notes-remember-me", $key, $ttl, $base_dir);
+					setcookie("x-notes-data-encoded", bin2hex(str_rot13($username)), $ttl, $base_dir);
 					file_put_contents($cfg_path . "token.config", json_encode($token));
 				}
 
@@ -47,8 +47,8 @@
 		session_destroy();
 		$_SESSION = array();
 		file_put_contents($cfg_path . "token.config", "{}");
-		setcookie("x-notes-remember-me", null, -1, "/");
-		setcookie("x-notes-data-encoded", null, -1, "/");
+		setcookie("x-notes-remember-me", null, -1, $base_dir);
+		setcookie("x-notes-data-encoded", null, -1, $base_dir);
 		if(empty($_SESSION)) {
 			echo "done";
 		}

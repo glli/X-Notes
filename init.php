@@ -1,5 +1,8 @@
 <?php
+	session_name("XNOTES_SESSID");
 	session_start();
+
+	$base_dir = "/" . basename(__DIR__);
 	$cfg = include('config.php');
 	$username = $_SESSION['Username'];
 	$xnotes_username = $username;
@@ -39,8 +42,8 @@
 	if(!$token_valid && isset($_COOKIE['x-notes-remember-me'])) {
 		unset($_COOKIE['x-notes-remember-me']);
 		unset($_COOKIE['x-notes-data-encoded']);
-		setcookie("x-notes-remember-me", null, -1, "/");
-		setcookie("x-notes-data-encoded", null, -1, "/");
+		setcookie("x-notes-remember-me", null, -1, $base_dir);
+		setcookie("x-notes-data-encoded", null, -1, $base_dir);
 	}
 	$logged_in = false;
 	$valid_username = $account["username"];
