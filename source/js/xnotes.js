@@ -902,7 +902,7 @@ $(document).ready(function() {
 	});
 	$(window).bind('beforeunload', function(){
 		if ($(".editor-content").attr("note-change") === "true") {
-			return confirm("Are you sure to close? The note is changed and not saved.");
+			return "Are you sure to close? The note is changed and not saved.";
 		}
 	});
 	$(document).mouseup(function(e) {
