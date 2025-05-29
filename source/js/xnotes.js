@@ -624,6 +624,7 @@ $(document).ready(function() {
 		} else if (action == "select-note") {
 			select_note(data);
 		} else if (action == "compose-note") {
+			must_close_note();
 			compose_note();
 		}
 		close_user_confirmation();
@@ -897,6 +898,11 @@ $(document).ready(function() {
 		}
 		if(event.which == 13 && $(".user-confirmation-wrapper").is(":visible")) {
 			$(".user-confirmation-wrapper .check-icon").trigger("click");
+		}
+	});
+	$(window).bind('beforeunload', function(){
+		if ($(".editor-content").attr("note-change") === "true") {
+			return confirm("Are you sure to close? The note is changed and not saved.");
 		}
 	});
 	$(document).mouseup(function(e) {
