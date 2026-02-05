@@ -1564,23 +1564,31 @@ $(document).ready(function() {
 		setTimeout(apply_settings, 125); // TO BE CHANGED
 	}
 
-	var inactivity_timer = null;
+	let inactivity_timer = null;
+	let inactivity_throttled = false;
 	function set_inactivity_timeout(on) {
 		if (on && inactivity_timer == null) {
-			const idle_minutes = 5;
+			const idle_minutes = 8;
 			function resetTimer() {
-				clearTimeout(inactivity_timer);
-				inactivity_timer = setTimeout(() => {
-					console.log("Close the note due to inactivity timeout");
-					close_note();
-				}, idle_minutes * 60 * 1000);
+				if (!inactivity_throttled) {
+					inactivity_throttled = true;
+					setTimeout(() => {
+						inactivity_throttled = false;
+					}, 500);
+
+					clearTimeout(inactivity_timer);
+					inactivity_timer = setTimeout(() => {
+						console.log("Close the note due to inactivity.");
+						close_note();
+					}, idle_minutes * 60 * 1000);
+				}
 			}
 			resetTimer();
-			$(document.body).on("mousemove keydown click", resetTimer);
+			$(document.body).on("mousemove scroll touchstart keydown click", resetTimer, { passive: true });
 		} else if (!on && inactivity_timer != null) {
 			clearTimeout(inactivity_timer);
 			inactivity_timer = null;
-			$(document.body).off("mousemove keydown click");
+			$(document.body).off("mousemove scroll touchstart keydown click");
 		}
 	}
 });
