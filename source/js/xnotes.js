@@ -1584,7 +1584,7 @@ $(document).ready(function() {
 				}
 			}
 			resetTimer();
-			$(document.body).on("mousemove scroll touchstart keydown click", resetTimer, { passive: true });
+			$(document.body).on("mousemove scroll touchstart keydown click", resetTimer);
 		} else if (!on && inactivity_timer != null) {
 			clearTimeout(inactivity_timer);
 			inactivity_timer = null;
